@@ -1,19 +1,33 @@
-.section .data
-    fname: .asciz "test"
-
 .section .text
     .global _start
     .intel_syntax noprefix
 
 /* TODO
-- [ ] Specify file as option, eg. `cat test`
+- [x] Specify file as option, eg. `cat test`
 - [ ] Reserve buffer space according to file size
 */
 
 _start:
+        /*  This gets argc, which stores the number of arguments
+            At the moment not used for anything so
+            just pop it out of stack to rdi
+        */
+        pop rdi
+
+        /* C
+        if (rax < 2) {
+            return 0;
+        }
+        */
+        cmp rdi, 2 # check that arguments are given, doesn't care for extra arguments
+        jl exit # conditional jump, jumps if rax is less than 2
+
+        pop rdi # remove program name from stack and put it into register
+        pop rdi # replace program name with argument
+
         # sys_open open the file
+        # argument already loaded into rdi, so no need to load it there again
         mov rax, 2
-        lea rdi, [rip + fname]
         mov rsi, 0
         mov rdx, 0
         syscall
@@ -40,7 +54,10 @@ _start:
         syscall
 
         # sys_exit
-        mov rax, 60
-        mov rdi, 0
-        syscall
+        jmp exit
+
+exit:
+    mov rax, 60
+    mov rdi, 0
+    syscall
 
